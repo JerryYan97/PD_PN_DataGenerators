@@ -7,8 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(ThirdParties/eigen-3.3.9/)
 include_directories(/opt/intel/oneapi/mkl/2021.1.1/include)
-include_directories(/opt/intel/oneapi/tbb/2021.1.1/include/tbb)
-
 
 # Find Intel OneAPI libraries
 find_library(MKL_LIB NAMES libmkl_intel_lp64 PATHS /opt/intel/oneapi/mkl/2021.1.1/lib/intel64)
@@ -33,21 +31,21 @@ if(NOT TBB_ONEAPI)
 endif()
 message(${TBB_ONEAPI})
 
-# Find tbb library
+# Add tbb library to rpath
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,/opt/intel/oneapi/tbb/2021.1.1/lib/intel64/gcc4.8")
+
 FIND_PACKAGE(Threads REQUIRED)
 
 add_executable(
         pd_pn_generators
         Src/main.cpp
         Src/Simulators/PNSimulator.cpp
-        Src/Simulators/PNSimulator.h Src/macro.h)
+        Src/Simulators/PNSimulator.h Src/macro.h Src/app.cpp Src/app.h)
 
 target_link_libraries(pd_pn_generators
                       PUBLIC ${TBB_ONEAPI}
                       PUBLIC ${MKL_LIB}
                       PUBLIC ${MKL_TBB}
-                      # ${MKL_SEQ}
                       PUBLIC ${MKL_CORE}
-                      # PUBLIC ${CMAKE_THREAD_LIBS_INIT}
+                      PUBLIC ${CMAKE_THREAD_LIBS_INIT}
                       )

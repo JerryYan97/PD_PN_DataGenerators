@@ -9,6 +9,8 @@ and Projective Dynamics simulation in 3D.
 
 It is a CMAKE project with several 3rd party libraries attached. 
 Besides, you also need to download and install the Intel's OneAPI to get MKL and TBB supports. 
+Then, you need to specify the folder of the MKL and TBB lib folder in your system in the ```CMakeList.txt```.
+ 
 
 ### Reference, Third Parties and Acknowledgments
 
