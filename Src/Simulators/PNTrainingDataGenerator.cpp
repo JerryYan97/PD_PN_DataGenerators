@@ -2,4 +2,4 @@
 // Created by jiaruiyan on 1/19/21.
 //
 
-#include "PNSimulator.h"
+#include "PNTrainingDataGenerator.h"

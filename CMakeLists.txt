@@ -14,28 +14,28 @@ endif()
 include_directories($ENV{MKL_ROOT}/include)
 
 # Find Intel OneAPI libraries
-find_library(MKL_LIB NAMES libmkl_intel_lp64 PATHS ENV{MKL_ROOT}/lib/intel64)
+find_library(MKL_LIB NAMES mkl_intel_lp64 PATHS $ENV{MKL_ROOT}/lib/intel64)
 if(NOT MKL_LIB)
     message(FATAL_ERROR "mkl library not found")
 endif()
 
-find_library(MKL_TBB NAMES libmkl_tbb_thread PATHS ENV{MKL_ROOT}/lib/intel64)
+find_library(MKL_TBB NAMES mkl_tbb_thread PATHS $ENV{MKL_ROOT}/lib/intel64)
 if(NOT MKL_TBB)
     message(FATAL_ERROR "MKL_TBB library not found")
 endif()
 
-find_library(MKL_CORE NAMES libmkl_core PATHS ENV{MKL_ROOT}/lib/intel64)
+find_library(MKL_CORE NAMES mkl_core PATHS $ENV{MKL_ROOT}/lib/intel64)
 if(NOT MKL_CORE)
     message(FATAL_ERROR "mkl CORE library not found")
 endif()
 
-find_library(TBB_ONEAPI NAMES libtbb.so.12 PATHS ENV{TBB_LIB_DIR})
+find_library(TBB_ONEAPI NAMES libtbb.so.12 PATHS $ENV{TBB_LIB_DIR})
 if(NOT TBB_ONEAPI)
     message(FATAL_ERROR "TBB library not found")
 endif()
 
 # Add tbb library to rpath
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,ENV{TBB_LIB_DIR}")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,$ENV{TBB_LIB_DIR}")
 
 # libigl settings
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
@@ -48,8 +48,19 @@ FIND_PACKAGE(LIBIGL REQUIRED)
 add_executable(
         pd_pn_generators
         Src/main.cpp
+        Src/macro.h
+        Src/app.cpp
+        Src/app.h
+        Src/Simulators/DataGenerator.cpp
+        Src/Simulators/DataGenerator.h
         Src/Simulators/PNSimulator.cpp
-        Src/Simulators/PNSimulator.h Src/macro.h Src/app.cpp Src/app.h)
+        Src/Simulators/PNSimulator.h
+        Src/Simulators/PNTrainingDataGenerator.cpp
+        Src/Simulators/PNTrainingDataGenerator.h
+        Src/common/utils/AppReader.cpp
+        Src/common/utils/AppReader.h
+        Src/common/utils/AppWriter.cpp
+        Src/common/utils/AppWriter.h Src/common/utils/InfoStructs.h)
 
 target_link_libraries(pd_pn_generators
                       PUBLIC ${TBB_ONEAPI}
