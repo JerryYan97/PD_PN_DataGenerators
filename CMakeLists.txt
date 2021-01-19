@@ -3,38 +3,47 @@ cmake_minimum_required(VERSION 3.17)
 project(pd_pn_generators)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # set(CMAKE_VERBOSE_MAKEFILE ON)
 
-include_directories(ThirdParties/eigen-3.3.9/)
-include_directories(/opt/intel/oneapi/mkl/2021.1.1/include)
+# Check environment variables
+if(NOT DEFINED ENV{LIBIGL_DIR} OR NOT DEFINED ENV{MKL_ROOT} OR NOT DEFINED ENV{TBB_LIB_DIR})
+    message(FATAL_ERROR "Your environment variables are not set.")
+endif()
+
+include_directories($ENV{MKL_ROOT}/include)
 
 # Find Intel OneAPI libraries
-find_library(MKL_LIB NAMES libmkl_intel_lp64 PATHS /opt/intel/oneapi/mkl/2021.1.1/lib/intel64)
+find_library(MKL_LIB NAMES libmkl_intel_lp64 PATHS ENV{MKL_ROOT}/lib/intel64)
 if(NOT MKL_LIB)
     message(FATAL_ERROR "mkl library not found")
 endif()
 
-find_library(MKL_TBB NAMES libmkl_tbb_thread PATHS /opt/intel/oneapi/mkl/2021.1.1/lib/intel64)
+find_library(MKL_TBB NAMES libmkl_tbb_thread PATHS ENV{MKL_ROOT}/lib/intel64)
 if(NOT MKL_TBB)
     message(FATAL_ERROR "MKL_TBB library not found")
 endif()
-message(${MKL_TBB})
 
-find_library(MKL_CORE NAMES libmkl_core PATHS /opt/intel/oneapi/mkl/2021.1.1/lib/intel64)
+find_library(MKL_CORE NAMES libmkl_core PATHS ENV{MKL_ROOT}/lib/intel64)
 if(NOT MKL_CORE)
     message(FATAL_ERROR "mkl CORE library not found")
 endif()
 
-find_library(TBB_ONEAPI NAMES libtbb.so.12 PATHS /opt/intel/oneapi/tbb/2021.1.1/lib/intel64/gcc4.8)
+find_library(TBB_ONEAPI NAMES libtbb.so.12 PATHS ENV{TBB_LIB_DIR})
 if(NOT TBB_ONEAPI)
     message(FATAL_ERROR "TBB library not found")
 endif()
-message(${TBB_ONEAPI})
 
 # Add tbb library to rpath
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,/opt/intel/oneapi/tbb/2021.1.1/lib/intel64/gcc4.8")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,ENV{TBB_LIB_DIR}")
+
+# libigl settings
+option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
+option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
+
 
 FIND_PACKAGE(Threads REQUIRED)
+FIND_PACKAGE(LIBIGL REQUIRED)
 
 add_executable(
         pd_pn_generators
@@ -48,4 +57,6 @@ target_link_libraries(pd_pn_generators
                       PUBLIC ${MKL_TBB}
                       PUBLIC ${MKL_CORE}
                       PUBLIC ${CMAKE_THREAD_LIBS_INIT}
+                      PUBLIC igl::core
+                      PUBLIC igl::opengl_glfw
                       )
