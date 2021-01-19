@@ -19,7 +19,7 @@ private:
 
 public:
     void run(int test_case_id, int frame_cnt);
-    ~App();
+    ~App()= default;
 };
 
 #endif //PD_PN_GENERATORS_APP_H

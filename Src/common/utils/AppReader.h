@@ -5,9 +5,14 @@
 #ifndef PD_PN_GENERATORS_APPREADER_H
 #define PD_PN_GENERATORS_APPREADER_H
 
+#include <igl/readMSH.h>
 
 class AppReader {
-    void read_test_case(int id);
+public:
+    void read_test_case(int id,
+                        Eigen::MatrixXd &X,
+                        Eigen::MatrixXi &Tet,
+                        Eigen::VectorXi &TetTag);
 };
 
 
