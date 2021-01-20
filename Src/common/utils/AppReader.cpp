@@ -40,10 +40,7 @@ public:
 
 };
 
-void AppReader::read_test_case(int id,
-                    Eigen::MatrixXd &X,
-                    Eigen::MatrixXi &Tet,
-                    Eigen::MatrixXi &BTri){
+void AppReader::read_test_case(int id, TestCaseInfo &info) {
     // Unused API variables
     Eigen::MatrixXi Tri;
     Eigen::VectorXi TriTag;
@@ -54,18 +51,18 @@ void AppReader::read_test_case(int id,
     std::string meshStr = "armadillolow_17698v_72161t.msh";
     const std::string readfile = this->m_default_mesh_path + meshStr;
     // X and Tet are only two useful parameters here.
-    if (!igl::readMSH(readfile, X, Tri, Tet, TriTag, TetTag)){
+    if (!igl::readMSH(readfile, info.init_X, Tri, info.tet, TriTag, TetTag)){
         throw std::invalid_argument("Cannot read .msh file!");
     }
 
     // Check read mesh
-    assert(X.rows() > 0 && X.cols() == 3);
-    assert(Tet.rows() > 0 && Tet.cols() == 4);
+    assert(info.init_X.rows() > 0 && info.init_X.cols() == 3);
+    assert(info.tet.rows() > 0 && info.tet.cols() == 4);
 
     // Find boundary triangles -- It should have a wiser way to do this.
     // Can blocked_range<iteraotr> work ?
     // Put all triangles used by tet into a set.
-    TriSet ts(&Tet);
+    TriSet ts(&info.tet);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, TetTag.rows()), ts);
     std::unordered_set<Triplet, TripletHashFunc>& tri_set_ref = ts.my_tri_set;
     // Fill the BTri.
@@ -80,15 +77,17 @@ void AppReader::read_test_case(int id,
             if (finder == tri_set_ref.end()){
                 finder = tri_set_ref.find(Triplet(triVInd[0], triVInd[2], triVInd[1]));
                 if(finder == tri_set_ref.end()){
-                    int oldSize = BTri.rows();
-                    BTri.conservativeResize(oldSize + 1, 3);
-                    BTri(oldSize, 0) = triVInd[0];
-                    BTri(oldSize, 1) = triVInd[1];
-                    BTri(oldSize, 2) = triVInd[2];
+                    int oldSize = info.boundary_tri.rows();
+                    info.boundary_tri.conservativeResize(oldSize + 1, 3);
+                    info.boundary_tri(oldSize, 0) = triVInd[0];
+                    info.boundary_tri(oldSize, 1) = triVInd[1];
+                    info.boundary_tri(oldSize, 2) = triVInd[2];
                 }
             }
         }
     }
 
+    // Fill other info
+    info.name_path = "./Data/PNData/ARM_";
 }
 

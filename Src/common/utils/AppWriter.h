@@ -16,7 +16,7 @@ public:
         m_default_output_path = "./Data/PNData";
     }
 
-    void write_anim_seq(int frame_id, std::string& filename,
+    void write_anim_seq(int frame_id, std::string& filename_path,
                         Eigen::MatrixXd& X, Eigen::MatrixXi& BTri);
 
 

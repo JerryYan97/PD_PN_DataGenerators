@@ -5,6 +5,9 @@ cmake-build-release/
 .idea/
 .run/
 
+# Data folders
+Data/PNData/
+
 # Prerequisites
 *.d
 

@@ -6,6 +6,7 @@
 #define PD_PN_GENERATORS_APPREADER_H
 
 #include <igl/readMSH.h>
+#include "InfoStructs.h"
 
 class AppReader {
 private:
@@ -15,10 +16,7 @@ public:
     AppReader() : m_default_mesh_path("./Data/MeshModels/")
     {}
 
-    void read_test_case(int id,
-                        Eigen::MatrixXd &X,
-                        Eigen::MatrixXi &Tet,
-                        Eigen::MatrixXi &BTri);
+    void read_test_case(int id, TestCaseInfo& info);
 };
 
 

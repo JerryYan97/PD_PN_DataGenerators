@@ -10,6 +10,6 @@ int main(){
     std::cout << "Eigen version:" << EIGEN_WORLD_VERSION << "."
               << EIGEN_MAJOR_VERSION << "." << EIGEN_MINOR_VERSION << std::endl;
     App my_app;
-    my_app.run(1001, 80);
+    my_app.run(1001, 20);
     return 0;
 }

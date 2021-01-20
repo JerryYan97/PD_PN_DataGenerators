@@ -6,8 +6,22 @@
 #define PD_PN_GENERATORS_PNSIMULATOR_H
 #include "DataGenerator.h"
 
-class PNSimulator {
+class PNSimulator : public DataGenerator {
+private:
 
+public:
+
+    PNSimulator(TestCaseInfo &info) : DataGenerator(info) {}
+
+    void step();
+
+    Eigen::MatrixXi& GetTetRef(){
+        return Tet;
+    }
+
+    Eigen::MatrixXd& GetXRef(){
+        return X;
+    }
 };
 
 

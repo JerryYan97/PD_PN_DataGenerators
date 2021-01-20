@@ -14,17 +14,18 @@ void delete_dir_content(const fs::path& dir_path) {
 }
 
 void App::run(int test_case_id, int frame_cnt){
-    // Read test case.
-    Eigen::MatrixXd X;
-    Eigen::MatrixXi Tet;
-    Eigen::MatrixXi BTri;
-    m_reader->read_test_case(1001, X, Tet, BTri);
+    // Read test case:
+    TestCaseInfo TInfo;
+    m_reader->read_test_case(1001, TInfo);
+    PNSimulator sim(TInfo);
 
     // Create and Clear output folder
     fs::create_directory("./Data/PNData/");
     delete_dir_content("./Data/PNData/");
 
-    // Output Anim sequence
-    std::string tmp = "TMP";
-    m_writer->write_anim_seq(0, tmp, X, BTri);
+    // main loop
+    for (int i = 0; i < frame_cnt; ++i) {
+        // Output Anim sequence
+        m_writer->write_anim_seq(i, TInfo.name_path, sim.GetXRef(), TInfo.boundary_tri);
+    }
 }

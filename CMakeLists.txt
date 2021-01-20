@@ -47,7 +47,7 @@ add_executable(
         Src/common/utils/AppReader.h
         Src/common/utils/AppWriter.cpp
         Src/common/utils/AppWriter.h
-        Src/common/utils/InfoStructs.h Src/common/utils/Triplet.h)
+        Src/common/utils/InfoStructs.h Src/common/utils/Triplet.h Src/Simulators/ForceFields/ForceField.h Src/Simulators/ForceFields/DirectForceField.h)
 
 target_link_libraries(pd_pn_generators
                       PUBLIC ${TBB_LIB}
