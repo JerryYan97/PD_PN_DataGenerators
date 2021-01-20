@@ -7,35 +7,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Check environment variables
-if(NOT DEFINED ENV{LIBIGL_DIR} OR NOT DEFINED ENV{MKL_ROOT} OR NOT DEFINED ENV{TBB_LIB_DIR})
+if(NOT DEFINED ENV{LIBIGL_DIR} OR NOT DEFINED ENV{MKL_ROOT} OR NOT DEFINED ENV{TBB_ROOT})
     message(FATAL_ERROR "Your environment variables are not set.")
 endif()
 
 include_directories($ENV{MKL_ROOT}/include)
+include_directories($ENV{TBB_ROOT}/include)
 
 # Find Intel OneAPI libraries
-find_library(MKL_LIB NAMES mkl_intel_lp64 PATHS $ENV{MKL_ROOT}/lib/intel64)
-if(NOT MKL_LIB)
-    message(FATAL_ERROR "mkl library not found")
-endif()
-
-find_library(MKL_TBB NAMES mkl_tbb_thread PATHS $ENV{MKL_ROOT}/lib/intel64)
-if(NOT MKL_TBB)
-    message(FATAL_ERROR "MKL_TBB library not found")
-endif()
-
-find_library(MKL_CORE NAMES mkl_core PATHS $ENV{MKL_ROOT}/lib/intel64)
-if(NOT MKL_CORE)
-    message(FATAL_ERROR "mkl CORE library not found")
-endif()
-
-find_library(TBB_ONEAPI NAMES libtbb.so.12 PATHS $ENV{TBB_LIB_DIR})
-if(NOT TBB_ONEAPI)
-    message(FATAL_ERROR "TBB library not found")
-endif()
+find_library(MKL_LIB NAMES mkl_intel_lp64 HINTS $ENV{MKL_ROOT}/lib/intel64 REQUIRED)
+find_library(MKL_TBB NAMES mkl_tbb_thread HINTS $ENV{MKL_ROOT}/lib/intel64 REQUIRED)
+find_library(MKL_CORE NAMES mkl_core HINTS $ENV{MKL_ROOT}/lib/intel64 REQUIRED)
+find_library(TBB_LIB NAMES tbb HINTS $ENV{TBB_ROOT}/lib/intel64/gcc4.8 REQUIRED)
 
 # Add tbb library to rpath
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,$ENV{TBB_LIB_DIR}")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags,-rpath,$ENV{TBB_ROOT}/lib/intel64/gcc4.8")
 
 # libigl settings
 option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
@@ -60,10 +46,11 @@ add_executable(
         Src/common/utils/AppReader.cpp
         Src/common/utils/AppReader.h
         Src/common/utils/AppWriter.cpp
-        Src/common/utils/AppWriter.h Src/common/utils/InfoStructs.h)
+        Src/common/utils/AppWriter.h
+        Src/common/utils/InfoStructs.h)
 
 target_link_libraries(pd_pn_generators
-                      PUBLIC ${TBB_ONEAPI}
+                      PUBLIC ${TBB_LIB}
                       PUBLIC ${MKL_LIB}
                       PUBLIC ${MKL_TBB}
                       PUBLIC ${MKL_CORE}

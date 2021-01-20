@@ -18,6 +18,11 @@ private:
     std::unique_ptr<DataGenerator> m_data_generator;
 
 public:
+    App(){
+        m_reader = std::make_unique<AppReader>();
+        m_writer = std::make_unique<AppWriter>();
+        m_data_generator = std::make_unique<DataGenerator>();
+    }
     void run(int test_case_id, int frame_cnt);
     ~App()= default;
 };

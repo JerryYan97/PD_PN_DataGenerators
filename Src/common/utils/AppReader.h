@@ -8,11 +8,18 @@
 #include <igl/readMSH.h>
 
 class AppReader {
+private:
+    std::string m_default_mesh_path;
+
 public:
+    AppReader() : m_default_mesh_path("./Data/MeshModels/")
+    {}
+
     void read_test_case(int id,
                         Eigen::MatrixXd &X,
                         Eigen::MatrixXi &Tet,
-                        Eigen::VectorXi &TetTag);
+                        Eigen::VectorXi &TetTag,
+                        Eigen::VectorXi &BTriTag);
 };
 
 
