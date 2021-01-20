@@ -18,8 +18,7 @@ public:
     void read_test_case(int id,
                         Eigen::MatrixXd &X,
                         Eigen::MatrixXi &Tet,
-                        Eigen::VectorXi &TetTag,
-                        Eigen::VectorXi &BTriTag);
+                        Eigen::MatrixXi &BTri);
 };
 
 

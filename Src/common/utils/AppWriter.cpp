@@ -3,14 +3,12 @@
 //
 
 #include "AppWriter.h"
+#include <igl/writeOBJ.h>
 
 void AppWriter::write_anim_seq(int frame_id, std::string& filename,
-                    Eigen::MatrixXd& X, Eigen::VectorXi& TetTag, Eigen::VectorXi& BoundaryTriTag){
-    // Fill the boundary structure
-    Eigen::VectorXi o_boundary_tri_idx;
-    Eigen::MatrixXd o_boundary_tri_X;
-    for(int i = 0; i < BoundaryTriTag.rows(); ++i){
-
-    }
+                    Eigen::MatrixXd& X, Eigen::MatrixXi& BTri){
+    // Fill the boundary structure -- it should also have a wiser way to output used X and BTri.
     // Output to .obj file
+    std::string obj_path = "./Data/PNData/tmp.obj";
+    igl::writeOBJ(obj_path, X, BTri);
 }

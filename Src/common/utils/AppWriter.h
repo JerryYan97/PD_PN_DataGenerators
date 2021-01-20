@@ -17,7 +17,7 @@ public:
     }
 
     void write_anim_seq(int frame_id, std::string& filename,
-                        Eigen::MatrixXd& X, Eigen::VectorXi& TetTag, Eigen::VectorXi& BoundaryTriTag);
+                        Eigen::MatrixXd& X, Eigen::MatrixXi& BTri);
 
 
 };
