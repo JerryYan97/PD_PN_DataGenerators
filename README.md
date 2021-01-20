@@ -15,10 +15,9 @@ project to these packages, you will need to specify three environment variables:
 
 1. ```MKL_ROOT=/opt/intel/oneapi/mkl/YOUR VERSION NUMBER```
 
-2. ```TBB_LIB_DIR=/opt/intel/oneapi/tbb/YOUR VERSION NUMBER/lib/intel64/gcc4.8```
+2. ```TBB_ROOT="/opt/intel/oneapi/tbb/YOUR VERSION NUMBER"```
    
 3. ```LIBIGL_DIR = YOUR Libigl PROJECT ROOT PATH```
- 
 
 ### Reference, Third Parties and Acknowledgments
 
@@ -26,3 +25,4 @@ project to these packages, you will need to specify three environment variables:
 2. Intel MKL, TBB
 3. https://github.com/ben-strasser/fast-cpp-csv-parser
 4. JSON parser
+5. Newton IPC

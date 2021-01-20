@@ -1,0 +1,14 @@
+//
+// Created by jiaruiyan on 1/19/21.
+//
+
+#ifndef PD_PN_GENERATORS_PNTRAININGDATAGENERATOR_H
+#define PD_PN_GENERATORS_PNTRAININGDATAGENERATOR_H
+
+
+class PNTrainingDataGenerator {
+
+};
+
+
+#endif //PD_PN_GENERATORS_PNTRAININGDATAGENERATOR_H
