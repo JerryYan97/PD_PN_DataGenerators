@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.17)
 
 project(pd_pn_generators)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -47,7 +47,7 @@ add_executable(
         Src/common/utils/AppReader.h
         Src/common/utils/AppWriter.cpp
         Src/common/utils/AppWriter.h
-        Src/common/utils/InfoStructs.h Src/common/utils/Triplet.h Src/Simulators/ForceFields/ForceField.h Src/Simulators/ForceFields/DirectForceField.h)
+        Src/common/utils/InfoStructs.h Src/common/utils/Triplet.h Src/common/ForceFields/ForceField.h Src/common/ForceFields/DirectForceField.h)
 
 target_link_libraries(pd_pn_generators
                       PUBLIC ${TBB_LIB}

@@ -13,11 +13,21 @@ void delete_dir_content(const fs::path& dir_path) {
     }
 }
 
+void App::set_force_field(TestCaseInfo Tinfo, std::shared_ptr<ForceField> ff) {
+    // TODO: Implement a more general force field settings.
+}
+
 void App::run(int test_case_id, int frame_cnt){
     // Read test case:
     TestCaseInfo TInfo;
     m_reader->read_test_case(1001, TInfo);
-    PNSimulator sim(TInfo);
+    // Set force field:
+    ForceFieldInfo ffinfo;
+    ffinfo.dir_force = Eigen::Vector3f(1.0, 0.0, 0.0);
+    ffinfo.type = DIRECT_FORCE;
+    TInfo.force_field->SetForceField(ffinfo);
+    // Create and init simulator:
+    PNSimulator sim(TInfo, TInfo.force_field);
 
     // Create and Clear output folder
     fs::create_directory("./Data/PNData/");
@@ -25,6 +35,7 @@ void App::run(int test_case_id, int frame_cnt){
 
     // main loop
     for (int i = 0; i < frame_cnt; ++i) {
+        sim.step();
         // Output Anim sequence
         m_writer->write_anim_seq(i, TInfo.name_path, sim.GetXRef(), TInfo.boundary_tri);
     }

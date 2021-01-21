@@ -3,7 +3,6 @@
 //
 
 #include "AppWriter.h"
-#include <igl/writeOBJ.h>
 
 void AppWriter::write_anim_seq(int frame_id, std::string& filename_path,
                     Eigen::MatrixXd& X, Eigen::MatrixXi& BTri){

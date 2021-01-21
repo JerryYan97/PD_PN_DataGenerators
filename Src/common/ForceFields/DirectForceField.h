@@ -12,11 +12,10 @@ private:
     Eigen::Vector3f m_force;
 
 public:
-    DirectForceField(ForceFieldInfo info) {
-        m_info = info;
-        m_force = m_info.dir_force;
+    DirectForceField() : m_force(Eigen::Vector3f(0.0, 0.0, 0.0)) {}
+    void SetForceField(ForceFieldInfo info){
+        m_force = info.dir_force;
     }
-
     virtual Eigen::Vector3f GetForce(Eigen::Vector3f pos){
         return m_force;
     }

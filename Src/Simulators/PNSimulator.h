@@ -10,18 +10,8 @@ class PNSimulator : public DataGenerator {
 private:
 
 public:
-
-    PNSimulator(TestCaseInfo &info) : DataGenerator(info) {}
-
-    void step();
-
-    Eigen::MatrixXi& GetTetRef(){
-        return Tet;
-    }
-
-    Eigen::MatrixXd& GetXRef(){
-        return X;
-    }
+    PNSimulator(TestCaseInfo &info, std::shared_ptr<ForceField> ff) : DataGenerator(info, ff) {}
+    virtual void step();
 };
 
 

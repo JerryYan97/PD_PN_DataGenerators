@@ -47,8 +47,8 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
     Eigen::VectorXi TetTag;
 
     // Call API
-    // std::string meshStr = "box3D_v518_t2112.msh";
-    std::string meshStr = "armadillolow_17698v_72161t.msh";
+    std::string meshStr = "box3D_v518_t2112.msh";
+    // std::string meshStr = "armadillolow_17698v_72161t.msh";
     const std::string readfile = this->m_default_mesh_path + meshStr;
     // X and Tet are only two useful parameters here.
     if (!igl::readMSH(readfile, info.init_X, Tri, info.tet, TriTag, TetTag)){
@@ -89,5 +89,12 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
 
     // Fill other info
     info.name_path = "./Data/PNData/ARM_";
+    info.dt = 0.01;
+    info.density = 100.0;
+    info.E = 1000.0;
+    info.nu = 0.4;
+
+    // Create force field
+    info.force_field = std::make_shared<DirectForceField>();
 }
 
