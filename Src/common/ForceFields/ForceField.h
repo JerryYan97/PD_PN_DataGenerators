@@ -14,12 +14,12 @@ enum ForceType{
 
 struct ForceFieldInfo{
     ForceType type;
-    Eigen::Vector3f dir_force;
+    Eigen::Vector3d dir_force;
 };
 
 class ForceField {
 public:
-    virtual Eigen::Vector3f GetForce(Eigen::Vector3f pos) = 0;
+    virtual Eigen::Vector3d GetForce(Eigen::Vector3d pos) = 0;
     virtual void SetForceField(ForceFieldInfo info) = 0;
 };
 

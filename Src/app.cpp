@@ -23,7 +23,7 @@ void App::run(int test_case_id, int frame_cnt){
     m_reader->read_test_case(1001, TInfo);
     // Set force field:
     ForceFieldInfo ffinfo;
-    ffinfo.dir_force = Eigen::Vector3f(1.0, 0.0, 0.0);
+    ffinfo.dir_force = Eigen::Vector3d(1.0, 0.0, 0.0);
     ffinfo.type = DIRECT_FORCE;
     TInfo.force_field->SetForceField(ffinfo);
     // Create and init simulator:
@@ -35,6 +35,7 @@ void App::run(int test_case_id, int frame_cnt){
 
     // main loop
     for (int i = 0; i < frame_cnt; ++i) {
+        std::cout << "==================== Frame: " << i << " ====================" << std::endl;
         sim.step();
         // Output Anim sequence
         m_writer->write_anim_seq(i, TInfo.name_path, sim.GetXRef(), TInfo.boundary_tri);

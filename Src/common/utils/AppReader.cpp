@@ -87,6 +87,14 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
         }
     }
 
+    // Find dirichlet -- Temporarily it is just for 3D box.
+    tbb::concurrent_vector<int> diri;
+    tbb::parallel_for(size_t(0), size_t(info.init_X.rows()), [&](size_t i){
+        if (info.init_X(i, 2) < -1.99){
+            diri.push_back(i);
+        }
+    });
+
     // Fill other info
     info.name_path = "./Data/PNData/ARM_";
     info.dt = 0.01;

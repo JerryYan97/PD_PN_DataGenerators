@@ -23,6 +23,6 @@ project to these packages, you will need to specify three environment variables:
 
 1. LIBIGL
 2. Intel MKL, TBB
-3. https://github.com/ben-strasser/fast-cpp-csv-parser
-4. JSON parser
-5. Newton IPC
+3. JSON parser
+4. https://github.com/ipc-sim/IPC
+5. UPenn CG Lab

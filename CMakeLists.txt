@@ -47,7 +47,15 @@ add_executable(
         Src/common/utils/AppReader.h
         Src/common/utils/AppWriter.cpp
         Src/common/utils/AppWriter.h
-        Src/common/utils/InfoStructs.h Src/common/utils/Triplet.h Src/common/ForceFields/ForceField.h Src/common/ForceFields/DirectForceField.h)
+        Src/common/utils/InfoStructs.h
+        Src/common/utils/Triplet.h
+        Src/common/ForceFields/ForceField.h
+        Src/common/ForceFields/DirectForceField.h
+        Src/common/physics/FixedCoRotMaterial.cpp
+        Src/common/physics/FixedCoRotMaterial.h
+        Src/common/math/math_tools.h
+        Src/common/math/SVD/ImplicitQRSVD.h
+        Src/common/math/SVD/Tools.h)
 
 target_link_libraries(pd_pn_generators
                       PUBLIC ${TBB_LIB}

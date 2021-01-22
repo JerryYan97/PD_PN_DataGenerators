@@ -9,14 +9,14 @@
 class DirectForceField : public ForceField{
 
 private:
-    Eigen::Vector3f m_force;
+    Eigen::Vector3d m_force;
 
 public:
-    DirectForceField() : m_force(Eigen::Vector3f(0.0, 0.0, 0.0)) {}
+    DirectForceField() : m_force(Eigen::Vector3d(0.0, 0.0, 0.0)) {}
     void SetForceField(ForceFieldInfo info){
         m_force = info.dir_force;
     }
-    virtual Eigen::Vector3f GetForce(Eigen::Vector3f pos){
+    virtual Eigen::Vector3d GetForce(Eigen::Vector3d pos){
         return m_force;
     }
 };

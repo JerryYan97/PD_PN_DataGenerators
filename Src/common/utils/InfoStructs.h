@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include <Eigen/Dense>
+#include <oneapi/tbb.h>
 #include "../ForceFields/DirectForceField.h"
 
 // Here, the concept of test case is a more general idea than the testcase in python.
@@ -27,9 +28,9 @@ struct TestCaseInfo{
     Eigen::MatrixXd init_X;
     Eigen::MatrixXi boundary_tri;
     Eigen::MatrixXi tet;
-    Eigen::MatrixXi dirichlet;
-
+    tbb::concurrent_vector<int> dirichlet;
     // Force field configuration info
+
     std::shared_ptr<ForceField> force_field;
 };
 
