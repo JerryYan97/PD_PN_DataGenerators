@@ -21,8 +21,14 @@
 void Singular_Value_Decomposition(const Eigen::Matrix3d& A,
                                   Eigen::Matrix3d& U,
                                   Eigen::Vector3d& singular_values,
-                                  Eigen::Matrix3d& V){
-    JIXIE::singularValueDecomposition(A, U, singular_values, V);
-}
+                                  Eigen::Matrix3d& V);
+
+// 3d
+void makePD(Eigen::Matrix3d& symMtr);
+
+// 2d
+void makePD(Eigen::Matrix2d& symMtr);
+
+void computeCofactorMtr(const Eigen::Matrix3d& F, Eigen::Matrix3d& A);
 
 #endif //PD_PN_GENERATORS_MATH_TOOLS_H

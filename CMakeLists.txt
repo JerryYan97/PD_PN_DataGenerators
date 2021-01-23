@@ -55,7 +55,7 @@ add_executable(
         Src/common/physics/FixedCoRotMaterial.h
         Src/common/math/math_tools.h
         Src/common/math/SVD/ImplicitQRSVD.h
-        Src/common/math/SVD/Tools.h)
+        Src/common/math/SVD/Tools.h Src/common/math/math_tools.cpp)
 
 target_link_libraries(pd_pn_generators
                       PUBLIC ${TBB_LIB}
