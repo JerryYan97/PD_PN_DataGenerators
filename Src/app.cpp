@@ -4,6 +4,7 @@
 
 #include "app.h"
 #include <filesystem>
+#include <igl/opengl/glfw/Viewer.h>
 
 namespace fs = std::filesystem;
 
@@ -17,13 +18,18 @@ void App::set_force_field(TestCaseInfo Tinfo, std::shared_ptr<ForceField> ff) {
     // TODO: Implement a more general force field settings.
 }
 
+void App::runVisualization(){
+    igl::opengl::glfw::Viewer viewer;
+    viewer.launch_init();
+}
+
 void App::run(int test_case_id, int frame_cnt){
     // Read test case:
     TestCaseInfo TInfo;
     m_reader->read_test_case(1001, TInfo);
     // Set force field:
     ForceFieldInfo ffinfo;
-    ffinfo.dir_force = Eigen::Vector3d(1.0, 0.0, 0.0);
+    ffinfo.dir_force = Eigen::Vector3d(6.0, 6.0, 6.0);
     ffinfo.type = DIRECT_FORCE;
     TInfo.force_field->SetForceField(ffinfo);
     // Create and init simulator:

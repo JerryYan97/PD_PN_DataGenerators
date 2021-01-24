@@ -77,16 +77,19 @@ public:
         const std::vector<Eigen::Matrix3d>& U = *my_U;
         const std::vector<Eigen::Vector3d>& Sigma = *my_Sigma;
         const std::vector<Eigen::Matrix3d>& V = *my_V;
-        std::vector<Eigen::Triplet<double>> t_vec(12 * 12 * (r.end() - r.begin()));
+        std::vector<Eigen::Triplet<double>> t_vec;
+        t_vec.reserve(12 * 12 * (r.end() - r.begin()));
         
         for(size_t i = r.begin(); i != r.end(); ++i){
             Eigen::Matrix<double, 9, 9> dPdF = Eigen::Matrix<double, 9, 9>::Zero(9, 9);
             my_sim->m_material.first_piola_kirchoff_stress_derivative(U[i], Sigma[i], V[i], dPdF);
             dPdF *= (my_sim->dt * my_sim->dt * my_sim->vol(i));
+            // std::cout << "dPdF:" << std::endl << dPdF << std::endl;
 
             Eigen::Matrix3d P = Eigen::Matrix3d::Zero();
             my_sim->m_material.first_piola_kirchoff_stress(F[i], U[i], Sigma[i], V[i], P);
             P *= (my_sim->dt * my_sim->dt * my_sim->vol(i));
+            // std::cout << "P:" << std::endl << P << std::endl;
 
             Eigen::Matrix<double, 12, 9> intermediate = Eigen::Matrix<double, 12, 9>::Zero();
             const Eigen::Matrix3d& IB = my_sim->restTInv[i];
@@ -120,30 +123,26 @@ public:
             indMap[11] = my_sim->Tet(i, 3) * 3 + 2;
 
             for(int rowI = 0; rowI < 12; ++rowI){
-                Eigen::Triplet t1(indMap[rowI], indMap[3], IB(0, 0) * intermediate(rowI, 0) + IB(0, 1) * intermediate(rowI, 3) + IB(0, 2) * intermediate(rowI, 6));
-                Eigen::Triplet t2(indMap[rowI], indMap[4], IB(0, 0) * intermediate(rowI, 1) + IB(0, 1) * intermediate(rowI, 4) + IB(0, 2) * intermediate(rowI, 7));
-                Eigen::Triplet t3(indMap[rowI], indMap[5], IB(0, 0) * intermediate(rowI, 2) + IB(0, 1) * intermediate(rowI, 5) + IB(0, 2) * intermediate(rowI, 8));
-                Eigen::Triplet t4(indMap[rowI], indMap[6], IB(1, 0) * intermediate(rowI, 0) + IB(1, 1) * intermediate(rowI, 3) + IB(1, 2) * intermediate(rowI, 6));
-                Eigen::Triplet t5(indMap[rowI], indMap[7], IB(1, 0) * intermediate(rowI, 1) + IB(1, 1) * intermediate(rowI, 4) + IB(1, 2) * intermediate(rowI, 7));
-                Eigen::Triplet t6(indMap[rowI], indMap[8], IB(1, 0) * intermediate(rowI, 2) + IB(1, 1) * intermediate(rowI, 5) + IB(1, 2) * intermediate(rowI, 8));
-                Eigen::Triplet t7(indMap[rowI], indMap[9], IB(2, 0) * intermediate(rowI, 0) + IB(2, 1) * intermediate(rowI, 3) + IB(2, 2) * intermediate(rowI, 6));
-                Eigen::Triplet t8(indMap[rowI], indMap[10], IB(2, 0) * intermediate(rowI, 1) + IB(2, 1) * intermediate(rowI, 4) + IB(2, 2) * intermediate(rowI, 7));
-                Eigen::Triplet t9(indMap[rowI], indMap[11], IB(2, 0) * intermediate(rowI, 2) + IB(2, 1) * intermediate(rowI, 5) + IB(2, 2) * intermediate(rowI, 8));
-                Eigen::Triplet t10(indMap[rowI], indMap[0], -t1.value() - t4.value() - t7.value());
-                Eigen::Triplet t11(indMap[rowI], indMap[0], -t2.value() - t5.value() - t8.value());
-                Eigen::Triplet t12(indMap[rowI], indMap[0], -t3.value() - t6.value() - t9.value());
-                t_vec.push_back(t1);
-                t_vec.push_back(t2);
-                t_vec.push_back(t3);
-                t_vec.push_back(t4);
-                t_vec.push_back(t5);
-                t_vec.push_back(t6);
-                t_vec.push_back(t7);
-                t_vec.push_back(t8);
-                t_vec.push_back(t9);
-                t_vec.push_back(t10);
-                t_vec.push_back(t11);
-                t_vec.push_back(t12);
+                std::vector<Eigen::Triplet<double>> tmp_vec(12);
+                tmp_vec[0] = Eigen::Triplet(indMap[rowI], indMap[3], IB(0, 0) * intermediate(rowI, 0) + IB(0, 1) * intermediate(rowI, 3) + IB(0, 2) * intermediate(rowI, 6));
+                tmp_vec[1] = Eigen::Triplet(indMap[rowI], indMap[4], IB(0, 0) * intermediate(rowI, 1) + IB(0, 1) * intermediate(rowI, 4) + IB(0, 2) * intermediate(rowI, 7));
+                tmp_vec[2] = Eigen::Triplet(indMap[rowI], indMap[5], IB(0, 0) * intermediate(rowI, 2) + IB(0, 1) * intermediate(rowI, 5) + IB(0, 2) * intermediate(rowI, 8));
+                tmp_vec[3] = Eigen::Triplet(indMap[rowI], indMap[6], IB(1, 0) * intermediate(rowI, 0) + IB(1, 1) * intermediate(rowI, 3) + IB(1, 2) * intermediate(rowI, 6));
+                tmp_vec[4] = Eigen::Triplet(indMap[rowI], indMap[7], IB(1, 0) * intermediate(rowI, 1) + IB(1, 1) * intermediate(rowI, 4) + IB(1, 2) * intermediate(rowI, 7));
+                tmp_vec[5] = Eigen::Triplet(indMap[rowI], indMap[8], IB(1, 0) * intermediate(rowI, 2) + IB(1, 1) * intermediate(rowI, 5) + IB(1, 2) * intermediate(rowI, 8));
+                tmp_vec[6] = Eigen::Triplet(indMap[rowI], indMap[9], IB(2, 0) * intermediate(rowI, 0) + IB(2, 1) * intermediate(rowI, 3) + IB(2, 2) * intermediate(rowI, 6));
+                tmp_vec[7] = Eigen::Triplet(indMap[rowI], indMap[10], IB(2, 0) * intermediate(rowI, 1) + IB(2, 1) * intermediate(rowI, 4) + IB(2, 2) * intermediate(rowI, 7));
+                tmp_vec[8] = Eigen::Triplet(indMap[rowI], indMap[11], IB(2, 0) * intermediate(rowI, 2) + IB(2, 1) * intermediate(rowI, 5) + IB(2, 2) * intermediate(rowI, 8));
+                tmp_vec[9] = Eigen::Triplet(indMap[rowI], indMap[0], -tmp_vec[0].value() - tmp_vec[3].value() - tmp_vec[6].value());
+                tmp_vec[10] = Eigen::Triplet(indMap[rowI], indMap[1], -tmp_vec[1].value() - tmp_vec[4].value() - tmp_vec[7].value());
+                tmp_vec[11] = Eigen::Triplet(indMap[rowI], indMap[2], -tmp_vec[2].value() - tmp_vec[5].value() - tmp_vec[8].value());
+                for (int j = 0; j < 12; ++j) {
+                    int row_idx = tmp_vec[j].row();
+                    int col_idx = tmp_vec[j].col();
+                    if(!my_sim->m_fixed_label[row_idx] && !my_sim->m_fixed_label[col_idx]){
+                        t_vec.push_back(tmp_vec[j]);
+                    }
+                }
             }
             double R10 = IB(0, 0) * P(0, 0) + IB(0, 1) * P(0, 1) + IB(0, 2) * P(0, 2);
             double R11 = IB(0, 0) * P(1, 0) + IB(0, 1) * P(1, 1) + IB(0, 2) * P(1, 2);
@@ -154,18 +153,26 @@ public:
             double R30 = IB(2, 0) * P(0, 0) + IB(2, 1) * P(0, 1) + IB(2, 2) * P(0, 2);
             double R31 = IB(2, 0) * P(1, 0) + IB(2, 1) * P(1, 1) + IB(2, 2) * P(1, 2);
             double R32 = IB(2, 0) * P(2, 0) + IB(2, 1) * P(2, 1) + IB(2, 2) * P(2, 2);
-            acc_grad_E[my_sim->Tet(i, 1) * 3 + 0] += R10;
-            acc_grad_E[my_sim->Tet(i, 1) * 3 + 1] += R11;
-            acc_grad_E[my_sim->Tet(i, 1) * 3 + 2] += R12;
-            acc_grad_E[my_sim->Tet(i, 2) * 3 + 0] += R20;
-            acc_grad_E[my_sim->Tet(i, 2) * 3 + 1] += R21;
-            acc_grad_E[my_sim->Tet(i, 2) * 3 + 2] += R22;
-            acc_grad_E[my_sim->Tet(i, 3) * 3 + 0] += R30;
-            acc_grad_E[my_sim->Tet(i, 3) * 3 + 1] += R31;
-            acc_grad_E[my_sim->Tet(i, 3) * 3 + 2] += R32;
-            acc_grad_E[my_sim->Tet(i, 0) * 3 + 0] += -R10 - R20 - R30;
-            acc_grad_E[my_sim->Tet(i, 0) * 3 + 1] += -R11 - R21 - R31;
-            acc_grad_E[my_sim->Tet(i, 0) * 3 + 2] += -R12 - R22 - R32;
+            if(!my_sim->m_fixed_label[my_sim->Tet(i, 1) * 3]){
+                acc_grad_E[my_sim->Tet(i, 1) * 3 + 0] += R10;
+                acc_grad_E[my_sim->Tet(i, 1) * 3 + 1] += R11;
+                acc_grad_E[my_sim->Tet(i, 1) * 3 + 2] += R12;
+            }
+            if(!my_sim->m_fixed_label[my_sim->Tet(i, 2) * 3]){
+                acc_grad_E[my_sim->Tet(i, 2) * 3 + 0] += R20;
+                acc_grad_E[my_sim->Tet(i, 2) * 3 + 1] += R21;
+                acc_grad_E[my_sim->Tet(i, 2) * 3 + 2] += R22;
+            }
+            if(!my_sim->m_fixed_label[my_sim->Tet(i, 3) * 3]){
+                acc_grad_E[my_sim->Tet(i, 3) * 3 + 0] += R30;
+                acc_grad_E[my_sim->Tet(i, 3) * 3 + 1] += R31;
+                acc_grad_E[my_sim->Tet(i, 3) * 3 + 2] += R32;
+            }
+            if(!my_sim->m_fixed_label[my_sim->Tet(i, 0) * 3]){
+                acc_grad_E[my_sim->Tet(i, 0) * 3 + 0] += -R10 - R20 - R30;
+                acc_grad_E[my_sim->Tet(i, 0) * 3 + 1] += -R11 - R21 - R31;
+                acc_grad_E[my_sim->Tet(i, 0) * 3 + 2] += -R12 - R22 - R32;
+            }
         }
         Eigen::SparseMatrix<double> local_H(my_sim->n_verts * 3, my_sim->n_verts * 3);
         local_H.setFromTriplets(t_vec.begin(), t_vec.end());
@@ -200,33 +207,49 @@ void PNSimulator::compute_hessian_and_gradient(Eigen::SparseMatrix<double>& H, E
                                                const std::vector<Eigen::Matrix3d>& U,
                                                const std::vector<Eigen::Vector3d>& Sigma,
                                                const std::vector<Eigen::Matrix3d>& V) {
-    // Inerita
-    std::vector<Eigen::Triplet<double>> triplet_vec(3 * n_verts);
+    // Inerita and dirichlet mat
+    // std::vector<Eigen::Triplet<double>> triplet_vec;
+    // triplet_vec.reserve(3 * n_verts);
+    tbb::concurrent_vector<Eigen::Triplet<double>> triplet_vec;
+    triplet_vec.reserve(3 * n_verts);
     tbb::parallel_for(size_t(0), size_t(n_verts), [&](size_t i){
-       triplet_vec[3 * i] = Eigen::Triplet<double>(3 * i, 3 * i, mass[i]);
-       triplet_vec[3 * i + 1] = Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, mass[i]);
-       triplet_vec[3 * i + 2] = Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, mass[i]);
-       grad_E[3 * i] += (mass[i] * (X(i, 0) - xTilde(i, 0)));
-       grad_E[3 * i + 1] += (mass[i] * (X(i, 1) - xTilde(i, 1)));
-       grad_E[3 * i + 2] += (mass[i] * (X(i, 2) - xTilde(i, 2)));
+        if(!m_fixed_label[3 * i]){
+            triplet_vec.push_back(Eigen::Triplet<double>(3 * i, 3 * i, mass[i]));
+            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, mass[i]));
+            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, mass[i]));
+            grad_E[3 * i] += (mass[i] * (X(i, 0) - xTilde(i, 0)));
+            grad_E[3 * i + 1] += (mass[i] * (X(i, 1) - xTilde(i, 1)));
+            grad_E[3 * i + 2] += (mass[i] * (X(i, 2) - xTilde(i, 2)));
+        }else{
+            triplet_vec.push_back(Eigen::Triplet<double>(3 * i, 3 * i, 1.0));
+            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0));
+            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0));
+        }
     });
     H.setFromTriplets(triplet_vec.begin(), triplet_vec.end());
+    // std::cout << "Hessian:" << std::endl << H << std::endl;
+    // std::cout << "Grad_E:" << std::endl << grad_E << std::endl;
     // Elasticity
     Parallel_Hessian_Gradient_Computation_Elasticity phgce(&F, &U, &Sigma, &V, this);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, n_elements), phgce);
+    // std::cout << "phgce.acc_H:" << std::endl << phgce.acc_H << std::endl;
     H += phgce.acc_H;
     grad_E += phgce.acc_grad_E;
 }
 
 void PNSimulator::step() {
+    std::cout.precision(17);
     // Compute xn and x tilde
     Eigen::MatrixXd Xprev(X);
     Eigen::MatrixXd Xt(X);
-    Eigen::MatrixXd xTilde = X + dt * vel;
+    Eigen::MatrixXd xTilde(n_verts, 3);
     tbb::parallel_for(size_t(0), size_t(n_verts), [&](size_t i){
-        xTilde.row(i) += (dt * dt * m_force_field->GetForce(X.row(i)) / mass(i));
+        Eigen::Vector3d f = m_force_field->GetForce(X.row(i));
+        xTilde(i, 0) = X(i, 0) + dt * vel(i, 0) + (dt * dt * f[0] / mass(i));
+        xTilde(i, 1) = X(i, 1) + dt * vel(i, 1) + (dt * dt * f[1] / mass(i));
+        xTilde(i, 2) = X(i, 2) + dt * vel(i, 2) + (dt * dt * f[2] / mass(i));
     });
-
+    // std::cout << "m:" << mass << std::endl;
     // Compute deformation gradient and Eprev
     std::vector<Eigen::Matrix3d> F(n_elements);
     std::vector<Eigen::Matrix3d> U_Vec(n_elements);
@@ -235,21 +258,32 @@ void PNSimulator::step() {
     double residual = 0.0;
     double one_over_dt = 1.0 / dt;
     double Eprev = compute_energy(F, U_Vec, Sigma_Vec, V_Vec, xTilde, true);
-
+    std::cout << "Eprev:" << Eprev << std::endl;
     do {
         // Construct Hessian and gradient
         Eigen::SparseMatrix<double> H(n_verts * 3, n_verts * 3);
         Eigen::VectorXd grad_E = Eigen::VectorXd::Zero(n_verts * 3);
         compute_hessian_and_gradient(H, grad_E, xTilde, F, U_Vec, Sigma_Vec, V_Vec);
+        // std::cout << "Hessian:" << std::endl << H << std::endl;
+        // std::cout << "Grad_E:" << std::endl << grad_E << std::endl;
         // Calculate sol
         Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> LLT_Solver;
         LLT_Solver.compute(H);
         Eigen::VectorXd p = -LLT_Solver.solve(grad_E);
+        /*
+        std::cout << "p == 1 idx:" << std::endl;
+        for (int i = 0; i < 3 * n_verts; ++i) {
+            if(p[i] == -1.0){
+                std::cout << i << std::endl;
+            }
+        }
+         */
         // std::cout << p << std::endl;
         double alpha = 1.0;
         double Ex = 0.0;
         do {
             // Apply sol
+            std::cout << "Applied alpha:" << alpha << std::endl;
             tbb::parallel_for(size_t(0), size_t(n_verts), [&](size_t i){
                 X(i, 0) = Xprev(i, 0) + alpha * p[3 * i];
                 X(i, 1) = Xprev(i, 1) + alpha * p[3 * i + 1];
@@ -262,9 +296,27 @@ void PNSimulator::step() {
         Eprev = Ex;
         Xprev = X;
         residual = p.cwiseAbs().maxCoeff();
+        /*
+        std::cout << "p abs min:" << p.cwiseAbs().minCoeff() << std::endl;
+        std::cout << "p abs max:" << p.cwiseAbs().maxCoeff() << std::endl;
+        std::cout << "p == 1 idx:" << p.cwiseAbs().maxCoeff() << std::endl;
+        for (int i = 0; i < 3 * n_verts; ++i) {
+            if(p[i] == 1.0){
+                std::cout << i << std::endl;
+            }
+        }
+        std::cout << "grad_E == 0 idx:" << p.cwiseAbs().maxCoeff() << std::endl;
+        for (int i = 0; i < 3 * n_verts; ++i) {
+            if(grad_E[i] == 0.0){
+                std::cout << i << std::endl;
+            }
+        }
+        */
+        std::cout << "grad E abs min:" << grad_E.cwiseAbs().minCoeff() << std::endl;
         std::cout << "Search Direction Residual : " << residual * one_over_dt << std::endl;
+        std::cout << "Ex : " << Ex << std::endl;
     }while ((residual * one_over_dt) > 0.0001);
     // Calculate velocity
     vel = (X - Xt) * one_over_dt;
-    std::cout << vel.row(0) << std::endl;
+    // std::cout << vel.row(0) << std::endl;
 }

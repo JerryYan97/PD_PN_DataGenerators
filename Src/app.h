@@ -23,6 +23,7 @@ public:
         m_writer = std::make_unique<AppWriter>();
     }
     void run(int test_case_id, int frame_cnt);
+    void runVisualization();
     void set_force_field(TestCaseInfo Tinfo, std::shared_ptr<ForceField> ff);
     ~App()= default;
 };

@@ -37,6 +37,7 @@ protected:
     std::vector<Eigen::Matrix<double, 3, 3>> restT;
     std::vector<Eigen::Matrix<double, 3, 3>> restTInv;
     std::shared_ptr<ForceField> m_force_field;
+    std::vector<bool> m_fixed_label;
 
     void compute_restT_m();
 
@@ -50,6 +51,18 @@ public:
         m_force_field = std::move(ff);
         n_elements = info.tet.rows();
         n_verts = info.init_X.rows();
+        m_fixed_label = std::vector<bool>(n_verts * 3, false);
+
+        for(auto& itr : info.dirichlet){
+            std::cout << itr << std::endl;
+        }
+
+        tbb::parallel_for(size_t(0), size_t(info.dirichlet.size()), [&](size_t i){
+            int idx = info.dirichlet[i];
+            m_fixed_label[idx * 3] = true;
+            m_fixed_label[idx * 3 + 1] = true;
+            m_fixed_label[idx * 3 + 2] = true;
+        });
 
         restT.resize(n_elements);
         restTInv.resize(n_elements);

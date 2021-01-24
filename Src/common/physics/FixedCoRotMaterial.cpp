@@ -45,9 +45,9 @@ void FixedCoRotMaterial::compute_dE_div_dsigma(const Eigen::Vector3d& singularVa
 void FixedCoRotMaterial::compute_BLeftCoef(const Eigen::Vector3d& singularValues, Eigen::Vector3d& BLeftCoef) const{
     const double sigmaProd = singularValues.prod();
     const double halfLambda = la / 2.0;
-    BLeftCoef[0] = mu - halfLambda * singularValues[2] * (sigmaProd - 1);
-    BLeftCoef[1] = mu - halfLambda * singularValues[0] * (sigmaProd - 1);
-    BLeftCoef[2] = mu - halfLambda * singularValues[1] * (sigmaProd - 1);
+    BLeftCoef[0] = mu - halfLambda * singularValues[2] * (sigmaProd - 1.0);
+    BLeftCoef[1] = mu - halfLambda * singularValues[0] * (sigmaProd - 1.0);
+    BLeftCoef[2] = mu - halfLambda * singularValues[1] * (sigmaProd - 1.0);
 }
 
 void FixedCoRotMaterial::first_piola_kirchoff_stress(
@@ -55,7 +55,8 @@ void FixedCoRotMaterial::first_piola_kirchoff_stress(
         const Eigen::Matrix3d& V, Eigen::Matrix3d& P) const {
     Eigen::Matrix3d JFInvT;
     computeCofactorMtr(F, JFInvT);
-    P = 2.0 * mu * (F - U * V.transpose()) + la * (Sigma.prod() - 1.0) * JFInvT;
+    double J = Sigma.prod();
+    P = 2.0 * mu * (F - U * V.transpose()) + la * (J - 1.0) * JFInvT;
 }
 
 void FixedCoRotMaterial::first_piola_kirchoff_stress_derivative(const Eigen::Matrix3d& U,

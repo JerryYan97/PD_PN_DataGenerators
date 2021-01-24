@@ -49,6 +49,7 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
     // Call API
     std::string meshStr = "box3D_v518_t2112.msh";
     // std::string meshStr = "armadillolow_17698v_72161t.msh";
+    // std::string meshStr = "tet.msh";
     const std::string readfile = this->m_default_mesh_path + meshStr;
     // X and Tet are only two useful parameters here.
     if (!igl::readMSH(readfile, info.init_X, Tri, info.tet, TriTag, TetTag)){
@@ -88,18 +89,31 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
     }
 
     // Find dirichlet -- Temporarily it is just for 3D box.
-    tbb::concurrent_vector<int> diri;
+    double z_bottom = info.init_X.col(2).minCoeff();
     tbb::parallel_for(size_t(0), size_t(info.init_X.rows()), [&](size_t i){
-        if (info.init_X(i, 2) < -1.99){
-            diri.push_back(i);
+        if (info.init_X(i, 2) == z_bottom){
+            info.dirichlet.push_back(i);
         }
     });
+    // ARM boundary
+//    double y_bottom = info.init_X.col(1).minCoeff();
+//    tbb::parallel_for(size_t(0), size_t(info.init_X.rows()), [&](size_t i){
+//        if (info.init_X(i, 1) < y_bottom + 0.01){
+//            info.dirichlet.push_back(i);
+//        }
+//    });
+    // Tet boundary
+    // info.dirichlet.push_back(0);
+    // info.dirichlet.push_back(1);
+    // info.dirichlet.push_back(2);
 
     // Fill other info
+    // info.name_path = "./Data/PNData/Tet3d_";
+    // info.name_path = "./Data/PNData/Box3d_";
     info.name_path = "./Data/PNData/ARM_";
     info.dt = 0.01;
-    info.density = 100.0;
-    info.E = 1000.0;
+    info.density = 1000.0;
+    info.E = 14000.0;
     info.nu = 0.4;
 
     // Create force field
