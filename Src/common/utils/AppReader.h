@@ -4,7 +4,7 @@
 
 #ifndef PD_PN_GENERATORS_APPREADER_H
 #define PD_PN_GENERATORS_APPREADER_H
-
+#define EIGEN_USE_MKL_ALL
 #include <igl/readMSH.h>
 #include "InfoStructs.h"
 

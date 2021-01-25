@@ -4,6 +4,7 @@
 
 #ifndef PD_PN_GENERATORS_INFOSTRUCTS_H
 #define PD_PN_GENERATORS_INFOSTRUCTS_H
+#define EIGEN_USE_MKL_ALL
 #include <string>
 #include <memory>
 #include <Eigen/Dense>

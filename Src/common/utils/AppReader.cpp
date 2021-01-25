@@ -47,8 +47,8 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
     Eigen::VectorXi TetTag;
 
     // Call API
-    std::string meshStr = "box3D_v518_t2112.msh";
-    // std::string meshStr = "armadillolow_17698v_72161t.msh";
+    // std::string meshStr = "box3D_v518_t2112.msh";
+    std::string meshStr = "armadillolow_17698v_72161t.msh";
     // std::string meshStr = "tet.msh";
     const std::string readfile = this->m_default_mesh_path + meshStr;
     // X and Tet are only two useful parameters here.
@@ -89,12 +89,12 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
     }
 
     // Find dirichlet -- Temporarily it is just for 3D box.
-    double z_bottom = info.init_X.col(2).minCoeff();
-    tbb::parallel_for(size_t(0), size_t(info.init_X.rows()), [&](size_t i){
-        if (info.init_X(i, 2) == z_bottom){
-            info.dirichlet.push_back(i);
-        }
-    });
+//    double z_bottom = info.init_X.col(2).minCoeff();
+//    tbb::parallel_for(size_t(0), size_t(info.init_X.rows()), [&](size_t i){
+//        if (info.init_X(i, 2) == z_bottom){
+//            info.dirichlet.push_back(i);
+//        }
+//    });
     // ARM boundary
 //    double y_bottom = info.init_X.col(1).minCoeff();
 //    tbb::parallel_for(size_t(0), size_t(info.init_X.rows()), [&](size_t i){
@@ -103,9 +103,9 @@ void AppReader::read_test_case(int id, TestCaseInfo &info) {
 //        }
 //    });
     // Tet boundary
-    // info.dirichlet.push_back(0);
-    // info.dirichlet.push_back(1);
-    // info.dirichlet.push_back(2);
+//    info.dirichlet.push_back(0);
+//    info.dirichlet.push_back(1);
+//    info.dirichlet.push_back(2);
 
     // Fill other info
     // info.name_path = "./Data/PNData/Tet3d_";

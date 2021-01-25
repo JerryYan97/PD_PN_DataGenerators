@@ -9,9 +9,10 @@
 #define EIGEN_VECTORIZE_SSE4_2
 #endif
 
-#ifndef EIGEN_USE_MKL_ALL
+// #ifndef EIGEN_USE_MKL_ALL
+// #define EIGEN_USE_MKL_ALL
+// #endif
 #define EIGEN_USE_MKL_ALL
-#endif
 
 #include <memory>
 #include <iostream>
@@ -53,9 +54,11 @@ public:
         n_verts = info.init_X.rows();
         m_fixed_label = std::vector<bool>(n_verts * 3, false);
 
+        /*
         for(auto& itr : info.dirichlet){
             std::cout << itr << std::endl;
         }
+         */
 
         tbb::parallel_for(size_t(0), size_t(info.dirichlet.size()), [&](size_t i){
             int idx = info.dirichlet[i];

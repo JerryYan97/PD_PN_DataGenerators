@@ -4,10 +4,12 @@
 
 #ifndef PD_PN_GENERATORS_PNSIMULATOR_H
 #define PD_PN_GENERATORS_PNSIMULATOR_H
+#define EIGEN_USE_MKL_ALL
 #include "DataGenerator.h"
-#include <Eigen/Sparse>
+#include <Eigen/SparseCholesky>
 
 class Parallel_Hessian_Gradient_Computation_Elasticity;
+class Parallel_Hessian_Gradient_Computation_Inerita;
 
 class PNSimulator : public DataGenerator {
 private:
@@ -18,10 +20,15 @@ private:
                                       const Eigen::MatrixXd& xTilde, const std::vector<Eigen::Matrix3d>& F,
                                       const std::vector<Eigen::Matrix3d>& U, const std::vector<Eigen::Vector3d>& Sigma,
                                       const std::vector<Eigen::Matrix3d>& V);
+
+
+
     friend Parallel_Hessian_Gradient_Computation_Elasticity;
+    friend Parallel_Hessian_Gradient_Computation_Inerita;
 public:
     PNSimulator(TestCaseInfo &info, std::shared_ptr<ForceField> ff) : DataGenerator(info, ff) {}
     virtual void step();
+    void hessian_test_case();
 };
 
 

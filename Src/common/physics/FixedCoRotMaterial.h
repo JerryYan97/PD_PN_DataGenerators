@@ -5,6 +5,7 @@
 #ifndef PD_PN_GENERATORS_FIXEDCOROTMATERIAL_H
 #define PD_PN_GENERATORS_FIXEDCOROTMATERIAL_H
 
+#define EIGEN_USE_MKL_ALL
 #include <vector>
 #include <Eigen/Dense>
 class FixedCoRotMaterial {

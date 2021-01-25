@@ -5,7 +5,7 @@
 #include "PNSimulator.h"
 
 #include "../common/math/math_tools.h"
-#include <Eigen/SparseCholesky>
+#include <time.h>
 
 class Parallel_Compute_Inertia_Energy{
     Eigen::VectorXd* m_mass;
@@ -63,6 +63,7 @@ double PNSimulator::compute_energy(std::vector<Eigen::Matrix3d>& F, std::vector<
 }
 
 // NOTE: I change the rhs to positive to make everything looks like Newton's method.
+// Before optimization 2s-3s.
 class Parallel_Hessian_Gradient_Computation_Elasticity{
     const std::vector<Eigen::Matrix3d>* my_F;
     const std::vector<Eigen::Matrix3d>* my_U;
@@ -72,13 +73,14 @@ class Parallel_Hessian_Gradient_Computation_Elasticity{
 public:
     Eigen::SparseMatrix<double> acc_H;
     Eigen::VectorXd acc_grad_E;
+    std::vector<Eigen::Triplet<double>> acc_triplet;
     void operator()( const tbb::blocked_range<size_t>& r ){
         const std::vector<Eigen::Matrix3d>& F = *my_F;
         const std::vector<Eigen::Matrix3d>& U = *my_U;
         const std::vector<Eigen::Vector3d>& Sigma = *my_Sigma;
         const std::vector<Eigen::Matrix3d>& V = *my_V;
-        std::vector<Eigen::Triplet<double>> t_vec;
-        t_vec.reserve(12 * 12 * (r.end() - r.begin()));
+        // std::vector<Eigen::Triplet<double>> t_vec;
+        // t_vec.reserve(12 * 12 * (r.end() - r.begin()));
         
         for(size_t i = r.begin(); i != r.end(); ++i){
             Eigen::Matrix<double, 9, 9> dPdF = Eigen::Matrix<double, 9, 9>::Zero(9, 9);
@@ -140,7 +142,8 @@ public:
                     int row_idx = tmp_vec[j].row();
                     int col_idx = tmp_vec[j].col();
                     if(!my_sim->m_fixed_label[row_idx] && !my_sim->m_fixed_label[col_idx]){
-                        t_vec.push_back(tmp_vec[j]);
+                        // t_vec.push_back(tmp_vec[j]);
+                        acc_triplet.push_back(tmp_vec[j]);
                     }
                 }
             }
@@ -174,9 +177,9 @@ public:
                 acc_grad_E[my_sim->Tet(i, 0) * 3 + 2] += -R12 - R22 - R32;
             }
         }
-        Eigen::SparseMatrix<double> local_H(my_sim->n_verts * 3, my_sim->n_verts * 3);
-        local_H.setFromTriplets(t_vec.begin(), t_vec.end());
-        acc_H += local_H;
+        // Eigen::SparseMatrix<double> local_H(my_sim->n_verts * 3, my_sim->n_verts * 3);
+        // local_H.setFromTriplets(t_vec.begin(), t_vec.end());
+        // acc_H += local_H;
     }
 
     Parallel_Hessian_Gradient_Computation_Elasticity(Parallel_Hessian_Gradient_Computation_Elasticity& x, tbb::split)
@@ -186,7 +189,9 @@ public:
     {}
 
     void join(const Parallel_Hessian_Gradient_Computation_Elasticity& y){
-        acc_H += y.acc_H;
+        // acc_H += y.acc_H;
+        acc_triplet.reserve(acc_triplet.size() + y.acc_triplet.size());
+        acc_triplet.insert(acc_triplet.end(), y.acc_triplet.begin(), y.acc_triplet.end());
         acc_grad_E += y.acc_grad_E;
     }
 
@@ -201,6 +206,46 @@ public:
     {}
 };
 
+class Parallel_Hessian_Gradient_Computation_Inerita{
+    const PNSimulator* m_sim;
+    const Eigen::MatrixXd* m_xTilde;
+public:
+    Eigen::VectorXd acc_grad_E;
+    std::vector<Eigen::Triplet<double>> acc_triplet;
+    void operator()( const tbb::blocked_range<size_t>& r ){
+        const Eigen::MatrixXd& xTilde = *m_xTilde;
+        for(size_t i = r.begin(); i != r.end(); ++i){
+            if(!m_sim->m_fixed_label[3 * i]){
+                acc_triplet.push_back(Eigen::Triplet<double>(3 * i, 3 * i, m_sim->mass[i]));
+                acc_triplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, m_sim->mass[i]));
+                acc_triplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, m_sim->mass[i]));
+                acc_grad_E[3 * i] += (m_sim->mass[i] * (m_sim->X(i, 0) - xTilde(i, 0)));
+                acc_grad_E[3 * i + 1] += (m_sim->mass[i] * (m_sim->X(i, 1) - xTilde(i, 1)));
+                acc_grad_E[3 * i + 2] += (m_sim->mass[i] * (m_sim->X(i, 2) - xTilde(i, 2)));
+            }else{
+                acc_triplet.push_back(Eigen::Triplet<double>(3 * i, 3 * i, 1.0));
+                acc_triplet.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0));
+                acc_triplet.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0));
+            }
+        }
+    }
+
+    Parallel_Hessian_Gradient_Computation_Inerita(Parallel_Hessian_Gradient_Computation_Inerita& x, tbb::split)
+    : m_sim(x.m_sim), m_xTilde(x.m_xTilde), acc_grad_E(Eigen::VectorXd::Zero(x.m_sim->n_verts * 3))
+    {}
+
+    void join(const Parallel_Hessian_Gradient_Computation_Inerita& y){
+        acc_triplet.reserve(acc_triplet.size() + y.acc_triplet.size());
+        acc_triplet.insert(acc_triplet.end(), y.acc_triplet.begin(), y.acc_triplet.end());
+        acc_grad_E += y.acc_grad_E;
+    }
+
+    Parallel_Hessian_Gradient_Computation_Inerita(const PNSimulator* sim, const Eigen::MatrixXd* xTilde)
+    : m_sim(sim), m_xTilde(xTilde), acc_grad_E(Eigen::VectorXd::Zero(sim->n_verts * 3))
+    {}
+
+};
+
 void PNSimulator::compute_hessian_and_gradient(Eigen::SparseMatrix<double>& H, Eigen::VectorXd& grad_E,
                                                const Eigen::MatrixXd& xTilde,
                                                const std::vector<Eigen::Matrix<double, 3, 3>>& F,
@@ -208,37 +253,34 @@ void PNSimulator::compute_hessian_and_gradient(Eigen::SparseMatrix<double>& H, E
                                                const std::vector<Eigen::Vector3d>& Sigma,
                                                const std::vector<Eigen::Matrix3d>& V) {
     // Inerita and dirichlet mat
-    // std::vector<Eigen::Triplet<double>> triplet_vec;
-    // triplet_vec.reserve(3 * n_verts);
-    tbb::concurrent_vector<Eigen::Triplet<double>> triplet_vec;
-    triplet_vec.reserve(3 * n_verts);
-    tbb::parallel_for(size_t(0), size_t(n_verts), [&](size_t i){
-        if(!m_fixed_label[3 * i]){
-            triplet_vec.push_back(Eigen::Triplet<double>(3 * i, 3 * i, mass[i]));
-            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, mass[i]));
-            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, mass[i]));
-            grad_E[3 * i] += (mass[i] * (X(i, 0) - xTilde(i, 0)));
-            grad_E[3 * i + 1] += (mass[i] * (X(i, 1) - xTilde(i, 1)));
-            grad_E[3 * i + 2] += (mass[i] * (X(i, 2) - xTilde(i, 2)));
-        }else{
-            triplet_vec.push_back(Eigen::Triplet<double>(3 * i, 3 * i, 1.0));
-            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 1, 3 * i + 1, 1.0));
-            triplet_vec.push_back(Eigen::Triplet<double>(3 * i + 2, 3 * i + 2, 1.0));
-        }
-    });
-    H.setFromTriplets(triplet_vec.begin(), triplet_vec.end());
+    clock_t t_h1_start = clock();
+    std::vector<Eigen::Triplet<double>> triplet_vec;
+    Parallel_Hessian_Gradient_Computation_Inerita phgci(this, &xTilde);
+    tbb::parallel_reduce(tbb::blocked_range<size_t>(0, n_verts), phgci);
     // std::cout << "Hessian:" << std::endl << H << std::endl;
     // std::cout << "Grad_E:" << std::endl << grad_E << std::endl;
+    triplet_vec.reserve(triplet_vec.size() + phgci.acc_triplet.size());
+    triplet_vec.insert(triplet_vec.end(), phgci.acc_triplet.begin(), phgci.acc_triplet.end());
+    grad_E += phgci.acc_grad_E;
+    // std::cout << "Time of construct Hessian 1:" << (double)(clock() - t_h1_start)/CLOCKS_PER_SEC << std::endl;
     // Elasticity
+    clock_t t_h2_start = clock();
     Parallel_Hessian_Gradient_Computation_Elasticity phgce(&F, &U, &Sigma, &V, this);
     tbb::parallel_reduce(tbb::blocked_range<size_t>(0, n_elements), phgce);
     // std::cout << "phgce.acc_H:" << std::endl << phgce.acc_H << std::endl;
-    H += phgce.acc_H;
+    triplet_vec.reserve(triplet_vec.size() + phgce.acc_triplet.size());
+    triplet_vec.insert(triplet_vec.end(), phgce.acc_triplet.begin(), phgce.acc_triplet.end());
     grad_E += phgce.acc_grad_E;
+    // std::cout << "Time of construct Hessian 2:" << (double)(clock() - t_h2_start)/CLOCKS_PER_SEC << std::endl;
+    clock_t t_h3_start = clock();
+    H.setFromTriplets(triplet_vec.begin(), triplet_vec.end());
+    // std::cout << "Set from triplets time:" << (double)(clock() - t_h3_start)/CLOCKS_PER_SEC << std::endl;
 }
 
 void PNSimulator::step() {
     std::cout.precision(17);
+    clock_t t_step_start = clock();
+
     // Compute xn and x tilde
     Eigen::MatrixXd Xprev(X);
     Eigen::MatrixXd Xt(X);
@@ -260,16 +302,24 @@ void PNSimulator::step() {
     double Eprev = compute_energy(F, U_Vec, Sigma_Vec, V_Vec, xTilde, true);
     std::cout << "Eprev:" << Eprev << std::endl;
     do {
+        clock_t t_itr_start = clock();
         // Construct Hessian and gradient
+        clock_t t_hessian_start = clock();
         Eigen::SparseMatrix<double> H(n_verts * 3, n_verts * 3);
         Eigen::VectorXd grad_E = Eigen::VectorXd::Zero(n_verts * 3);
         compute_hessian_and_gradient(H, grad_E, xTilde, F, U_Vec, Sigma_Vec, V_Vec);
-        // std::cout << "Hessian:" << std::endl << H << std::endl;
-        // std::cout << "Grad_E:" << std::endl << grad_E << std::endl;
+        // std::cout << "Time of construct Hessian:" << (double)(clock() - t_hessian_start)/CLOCKS_PER_SEC << std::endl;
+        std::cout << "Hessian:" << std::endl << H.sum() << std::endl;
+        std::cout << "Grad_E:" << std::endl << grad_E.sum() << std::endl;
         // Calculate sol
+        clock_t t_cholesky_start = clock();
         Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> LLT_Solver;
         LLT_Solver.compute(H);
+        // std::cout << "Time of cholesky factorization:" << (double)(clock() - t_cholesky_start)/CLOCKS_PER_SEC << std::endl;
+        clock_t t_solve_start = clock();
         Eigen::VectorXd p = -LLT_Solver.solve(grad_E);
+
+        // std::cout << "Time of solve:" << (double)(clock() - t_solve_start)/CLOCKS_PER_SEC << std::endl;
         /*
         std::cout << "p == 1 idx:" << std::endl;
         for (int i = 0; i < 3 * n_verts; ++i) {
@@ -279,11 +329,12 @@ void PNSimulator::step() {
         }
          */
         // std::cout << p << std::endl;
+        clock_t t_app_sol_start = clock();
         double alpha = 1.0;
         double Ex = 0.0;
         do {
             // Apply sol
-            std::cout << "Applied alpha:" << alpha << std::endl;
+            // std::cout << "Applied alpha:" << alpha << std::endl;
             tbb::parallel_for(size_t(0), size_t(n_verts), [&](size_t i){
                 X(i, 0) = Xprev(i, 0) + alpha * p[3 * i];
                 X(i, 1) = Xprev(i, 1) + alpha * p[3 * i + 1];
@@ -293,6 +344,7 @@ void PNSimulator::step() {
             alpha *= 0.5;
             Ex = compute_energy(F, U_Vec, Sigma_Vec, V_Vec, xTilde, true);
         }while (Ex > Eprev);
+        std::cout << "Time of applying sol:" << (double)(clock() - t_app_sol_start)/CLOCKS_PER_SEC << std::endl;
         Eprev = Ex;
         Xprev = X;
         residual = p.cwiseAbs().maxCoeff();
@@ -312,11 +364,66 @@ void PNSimulator::step() {
             }
         }
         */
-        std::cout << "grad E abs min:" << grad_E.cwiseAbs().minCoeff() << std::endl;
+        // std::cout << "grad E abs min:" << grad_E.cwiseAbs().minCoeff() << std::endl;
+        std::cout << "Time of an itr:" << (double)(clock() - t_itr_start)/CLOCKS_PER_SEC << std::endl;
         std::cout << "Search Direction Residual : " << residual * one_over_dt << std::endl;
-        std::cout << "Ex : " << Ex << std::endl;
+        // std::cout << "Ex : " << Ex << std::endl;
     }while ((residual * one_over_dt) > 0.0001);
     // Calculate velocity
     vel = (X - Xt) * one_over_dt;
+    std::cout << "Time of whole step:" << (double)(clock() - t_step_start)/CLOCKS_PER_SEC << std::endl;
     // std::cout << vel.row(0) << std::endl;
+}
+
+void PNSimulator::hessian_test_case() {
+    X *= 1.2;
+    Eigen::MatrixXd Xori(X);
+    Eigen::MatrixXd xTilde(n_verts, 3);
+    tbb::parallel_for(size_t(0), size_t(n_verts), [&](size_t i){
+        Eigen::Vector3d f = m_force_field->GetForce(X.row(i));
+        xTilde(i, 0) = X(i, 0) + dt * vel(i, 0) + (dt * dt * f[0] / mass(i));
+        xTilde(i, 1) = X(i, 1) + dt * vel(i, 1) + (dt * dt * f[1] / mass(i));
+        xTilde(i, 2) = X(i, 2) + dt * vel(i, 2) + (dt * dt * f[2] / mass(i));
+    });
+    std::vector<Eigen::Matrix3d> F(n_elements);
+    std::vector<Eigen::Matrix3d> U_Vec(n_elements);
+    std::vector<Eigen::Matrix3d> V_Vec(n_elements);
+    std::vector<Eigen::Vector3d> Sigma_Vec(n_elements);
+    double residual = 0.0;
+    double one_over_dt = 1.0 / dt;
+
+    double delta = 0.000001;
+    Eigen::MatrixXd deltaX = Eigen::MatrixXd(n_verts, 3);
+    Eigen::VectorXd pertubationX = Eigen::VectorXd(n_verts * 3);
+    deltaX.setConstant(delta);
+    pertubationX.setConstant(delta);
+    std::cout << deltaX << std::endl;
+    std::cout << pertubationX << std::endl;
+
+    Eigen::SparseMatrix<double> Hplus(n_verts * 3, n_verts * 3);
+    Eigen::SparseMatrix<double> Hminus(n_verts * 3, n_verts * 3);
+    Eigen::VectorXd grad_E_plus = Eigen::VectorXd::Zero(n_verts * 3);
+    Eigen::VectorXd grad_E_minus = Eigen::VectorXd::Zero(n_verts * 3);
+
+    // Calculate Hplus and Grad_E_plus
+    X = Xori + deltaX;
+    double E1 = compute_energy(F, U_Vec, Sigma_Vec, V_Vec, xTilde, true);
+    std::cout << "E1:" << E1 << std::endl;
+    compute_hessian_and_gradient(Hplus, grad_E_plus, xTilde, F, U_Vec, Sigma_Vec, V_Vec);
+
+    // Calculate Hminus and Grad_E_minus
+    X = Xori - deltaX;
+    double E2 = compute_energy(F, U_Vec, Sigma_Vec, V_Vec, xTilde, true);
+    std::cout << "E2:" << E2 << std::endl;
+    compute_hessian_and_gradient(Hminus, grad_E_minus, xTilde, F, U_Vec, Sigma_Vec, V_Vec);
+
+    // Calculate error for gradE and hessian
+    Eigen::VectorXd upper = grad_E_plus - grad_E_minus - (Hplus + Hminus) * pertubationX;
+    double error = upper.maxCoeff() / delta;
+    std::cout << "Error:" << error << std::endl;
+
+    // Calculate error for E and gradE
+    double upper2 = E1 - E2 - (grad_E_plus + grad_E_minus).dot(pertubationX);
+    double error2 = upper2 / delta;
+    std::cout << "Error2:" << error2 << std::endl;
 }

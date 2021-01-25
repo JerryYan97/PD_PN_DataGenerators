@@ -4,7 +4,7 @@
 
 #ifndef PD_PN_GENERATORS_FORCEFIELD_H
 #define PD_PN_GENERATORS_FORCEFIELD_H
-
+#define EIGEN_USE_MKL_ALL
 #include <Eigen/Dense>
 
 enum ForceType{

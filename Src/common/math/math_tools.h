@@ -10,9 +10,11 @@
 #define EIGEN_VECTORIZE_SSE4_2
 #endif
 
-#ifndef EIGEN_USE_MKL_ALL
 #define EIGEN_USE_MKL_ALL
-#endif
+
+// #ifndef EIGEN_USE_MKL_ALL
+// #define EIGEN_USE_MKL_ALL
+// #endif
 
 #include <Eigen/Dense>
 #include "SVD/ImplicitQRSVD.h"

@@ -68,7 +68,7 @@ void FixedCoRotMaterial::first_piola_kirchoff_stress_derivative(const Eigen::Mat
     compute_dE_div_dsigma(Sigma, dE_div_dsigma);
     Eigen::Matrix3d d2E_div_dsigma2;
     compute_d2E_div_dsigma2(Sigma, d2E_div_dsigma2);
-    makePD(d2E_div_dsigma2);
+    // makePD(d2E_div_dsigma2);
 
     // compute B
     Eigen::Vector3d BLeftCoef;
@@ -88,7 +88,7 @@ void FixedCoRotMaterial::first_piola_kirchoff_stress_derivative(const Eigen::Mat
         const double& leftCoef = BLeftCoef[cI];
         B[cI](0, 0) = B[cI](1, 1) = leftCoef + rightCoef;
         B[cI](0, 1) = B[cI](1, 0) = leftCoef - rightCoef;
-        makePD(B[cI]);
+        // makePD(B[cI]);
     }
 
     // compute M using A(d2E_div_dsigma2) and B

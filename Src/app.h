@@ -22,7 +22,8 @@ public:
         m_reader = std::make_unique<AppReader>();
         m_writer = std::make_unique<AppWriter>();
     }
-    void run(int test_case_id, int frame_cnt);
+    void run(int test_case_id, int frame_cnt, bool visualization);
+    void runTestCase();
     void runVisualization();
     void set_force_field(TestCaseInfo Tinfo, std::shared_ptr<ForceField> ff);
     ~App()= default;
